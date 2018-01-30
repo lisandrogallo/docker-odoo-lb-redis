@@ -1,0 +1,25 @@
+version: '3'
+services:
+    db:
+        image: postgres:9.6-alpine
+        hostname: db
+        environment:
+            # PGDATA: /var/lib/postgresql/data/pgdata
+            POSTGRES_PASSWORD: odoo
+            POSTGRES_USER: odoo
+        # volumes:
+        #     - ./db-data:/var/lib/postgresql/data/pgdata
+    odoo:
+        image: odoo:10.0
+        depends_on:
+            - db
+        ports:
+            - 8069
+    lb:
+        image: dockercloud/haproxy
+        ports:
+            - 80:80
+        links:
+            - odoo
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
