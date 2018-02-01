@@ -2,26 +2,38 @@ version: '3'
 services:
     db:
         image: postgres:9.6-alpine
-        hostname: db
+        # hostname: db
         environment:
             # PGDATA: /var/lib/postgresql/data/pgdata
             POSTGRES_PASSWORD: odoo
             POSTGRES_USER: odoo
         # volumes:
         #     - ./db-data:/var/lib/postgresql/data/pgdata
+    redis:
+        image: redis:alpine
     odoo:
-        image: odoo:10.0
+        image: lisogallo/odoo-redis:10.0
         depends_on:
             - db
+            - redis
         ports:
-            - 8069
-    lb:
-        image: dockercloud/haproxy
-        ports:
-            - 80:80
-        links:
-            - odoo
-        environment:
-            BALANCE: first
+            # - 8069
+            - 8069:8069
+        # command: wait-for-it.sh db:5432 -- odoo --database=test --init=smile_redis_session_store
+        # command: odoo --database=test --init=smile_redis_session_store
+        command: odoo
+        # command: --database=test --init=smile_redis_session_store
         volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
+            - ./addons:/mnt/extra-addons/
+            - ./conf:/etc/odoo
+            # - ./filestore:/var/lib/odoo
+    # lb:
+    #     image: dockercloud/haproxy
+    #     ports:
+    #         - 80:80
+    #     links:
+    #         - odoo
+    #     environment:
+    #         BALANCE: first
+    #     volumes:
+    #         - /var/run/docker.sock:/var/run/docker.sock
