@@ -13,16 +13,16 @@ services:
         image: redis:alpine
     odoo:
         image: lisogallo/odoo-redis:10.0
+        build:
+            context: .
+            dockerfile: odoo.dockerfile
         depends_on:
             - db
             - redis
         ports:
             # - 8069
             - 8069:8069
-        # command: wait-for-it.sh db:5432 -- odoo --database=test --init=smile_redis_session_store
-        # command: odoo --database=test --init=smile_redis_session_store
-        command: odoo
-        # command: --database=test --init=smile_redis_session_store
+        command: wait-for-it.sh db:5432 -- odoo --config=/etc/odoo/odoo.conf --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo --database=test --init=smile_redis_session_store
         volumes:
             - ./addons:/mnt/extra-addons/
             - ./conf:/etc/odoo
