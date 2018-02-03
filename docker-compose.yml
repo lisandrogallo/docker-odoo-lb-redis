@@ -18,21 +18,23 @@ services:
         depends_on:
             - db
             - redis
-        ports:
-            # - 8069
-            - 8069:8069
-        command: wait-for-it.sh db:5432 -- odoo --config=/etc/odoo/odoo.conf --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo --database=test --init=smile_redis_session_store
+            - lb
+        command: wait-for-it.sh db:5432 -- odoo --config=/etc/odoo/odoo.conf --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo --database=test --init=smile_redis_session_store,website
         volumes:
             - ./addons:/mnt/extra-addons/
             - ./conf:/etc/odoo
             # - ./filestore:/var/lib/odoo
-    # lb:
-    #     image: dockercloud/haproxy
-    #     ports:
-    #         - 80:80
-    #     links:
-    #         - odoo
-    #     environment:
-    #         BALANCE: first
-    #     volumes:
-    #         - /var/run/docker.sock:/var/run/docker.sock
+        labels:
+            - "traefik.backend=odoo"
+            - "traefik.port=8069"
+            - "traefik.frontend.rule=Host:odoo.liso.ga"
+    lb:
+        image: traefik
+        command: --web --docker --docker.domain=docker.localhost --logLevel=DEBUG
+        ports:
+            - 80:80
+            - 8080:8080
+            # - 443:443
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /dev/null:/traefik.toml
