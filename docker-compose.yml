@@ -1,4 +1,5 @@
 version: '3'
+
 services:
     db:
         image: postgres:9.6-alpine
@@ -8,9 +9,11 @@ services:
             POSTGRES_USER: odoo
         # volumes:
         #     - ./db-data:/var/lib/postgresql/data/pgdata
+
     redis:
         image: redis:alpine
-    odoo:
+
+    odoo_init:
         image: lisogallo/odoo-redis:10.0
         build:
             context: .
@@ -18,16 +21,29 @@ services:
         depends_on:
             - db
             - redis
-            - lb
-        command: wait-for-it.sh db:5432 -- odoo --config=/etc/odoo/odoo.conf --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo --database=test --init=smile_redis_session_store,website
+        command: wait-for-it.sh db:5432 -- odoo --config=/etc/odoo/odoo.conf --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo --database=test --init=smile_redis_session_store,website --stop-after-init
         volumes:
             - ./addons:/mnt/extra-addons/
             - ./conf:/etc/odoo
-            # - ./filestore:/var/lib/odoo
+            - odoo_data:/var/lib/odoo/
+
+    odoo:
+        image: lisogallo/odoo-redis:10.0
+        restart: always
+        depends_on:
+            - odoo_init
+            - db
+            - redis
+            - lb
+        volumes:
+            - ./addons:/mnt/extra-addons/
+            - ./conf:/etc/odoo
+            - odoo_data:/var/lib/odoo/
         labels:
             - "traefik.backend=odoo"
             - "traefik.port=8069"
             - "traefik.frontend.rule=Host:odoo.liso.ga"
+
     lb:
         image: traefik
         command: --web --docker --docker.domain=docker.localhost --logLevel=DEBUG
@@ -38,3 +54,6 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - /dev/null:/traefik.toml
+
+volumes:
+    odoo_data:
