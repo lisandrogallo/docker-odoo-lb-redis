@@ -42,7 +42,7 @@ services:
         labels:
             - "traefik.backend=odoo"
             - "traefik.port=8069"
-            - "traefik.frontend.rule=Host:odoo.liso.ga"
+            - "traefik.frontend.rule=Host:localhost"
 
     lb:
         image: traefik
