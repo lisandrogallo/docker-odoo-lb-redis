@@ -12,6 +12,8 @@ services:
 
     redis:
         image: redis:alpine
+        # ports:
+        #     - 6379:6379
 
     odoo_init:
         image: lisogallo/odoo-redis:10.0
