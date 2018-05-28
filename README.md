@@ -6,7 +6,8 @@
 git clone https://github.com/lisandrogallo/docker-odoo-lb-redis
 cd docker-odoo-lb-redis
 git submodule add -b 10.0 https://github.com/Smile-SA/odoo_addons
-ln -s odoo_addons/smile_redis_session_store addons
+mkdir addons
+cp -r odoo_addons/smile_redis_session_store addons/
 docker-compose up --scale odoo=5
 ```
 
